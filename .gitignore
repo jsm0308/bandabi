@@ -1,0 +1,57 @@
+# Generated files
+runs/
+data/cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Node / Next ---
+node_modules/
+.next/
+out/
+dist/
+
+# OS / junk
+.DS_Store
+Thumbs.db
+
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+
+
+# Results / runs (필요시 조정)
+runs/
+outputs/
+
+# Tools / assistants (절대 올리지 말기)
+.claude/
+.continue/
+.cursor/
+.ollama/
+.local/
+
+
+
+# --- VSCode ---
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# (매우 중요) 확장 설치 파일은 절대 추적 금지
+.vscode/extensions/

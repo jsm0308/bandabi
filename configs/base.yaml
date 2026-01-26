@@ -1,0 +1,24 @@
+paths:
+  centers_xlsx: "data/centers.xlsx"
+  run_root: "runs"
+  cache_dir: "data/cache"
+
+sim:
+  # "약속시간 vs 실제" 차이를 만들기 위해,
+  # promise_time은 평균속도 기반, actual_time은 노이즈(분산)로 샘플링
+  travel_time_noise_sigma: 0.25   # 0이면 약속=실제(지연 0)
+  detour_factor: 1.25            # 직선거리 대비 우회 계수(OSM 붙이면 제거 가능)
+
+kpi:
+  on_time_threshold_min: 5       # 5분 이내면 on-time
+
+time_model:
+  # MVP: historical profile (OpenAPI 기반 프로파일을 cache에 저장해놓고 사용)
+  default_speed_kmh: 18.0
+  speed_multiplier: 1.0
+  profile_cache_json: "data/cache/seoul_speed_profile.json"
+
+openapi:
+  # 실제 키/엔드포인트는 너가 발급받아서 채워넣기
+  seoul_openapi_key: ""
+  tdata_api_key: ""

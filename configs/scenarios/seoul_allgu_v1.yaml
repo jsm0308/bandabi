@@ -1,0 +1,37 @@
+area:
+  gu_list: ["ALL"]  # 모든 자치구
+
+service:
+  to_center_timeslots: ["08:00", "09:00", "10:00"]  # 오전 픽업
+  from_center_timeslots: ["17:00", "18:00"]  # 오후 드랍
+
+fleet:
+  capacity_gen: 4
+  capacity_wc: 2
+  max_vehicles_per_center_slot: 10
+scenario_name: "seoul_allgu_v1"
+
+service:
+  # 센터 도착 예약시간(타임슬롯)
+  to_center_timeslots: ["10:00", "12:00", "16:00"]
+  from_center_timeslots: ["18:00"]   # 드랍(센터->집) 출발 기준 시간
+  timezone: "Asia/Seoul"
+
+area:
+  gu_list: ["ALL"]   # ALL이면 centers_xlsx의 모든 SIGNGU_NM 사용
+
+demand:
+  n_requests_per_timeslot: 120
+  wheel_ratio: 0.25
+  seed: 42
+  radius_min_km: 0.5
+  radius_max_km: 3.0
+
+fleet:
+  capacity_gen: 10
+  capacity_wc: 4
+  max_vehicles_per_center_slot: 5
+
+routing:
+  # 기존 routing.py(hybrid_route) 있으면 사용, 없으면 fallback
+  method: "hybrid"
