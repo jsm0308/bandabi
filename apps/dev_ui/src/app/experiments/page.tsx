@@ -1,40 +1,86 @@
 import Link from "next/link";
-import { listExperiments } from "../../lib/runsRepo";
+import { listExperiments, readLeaderboard, pickBestVariant } from "@/lib/runs";
+import { KpiPills } from "@/components/KpiPills";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
-  const exps = await listExperiments();
+export default function ExperimentsPage() {
+  const exps = listExperiments();
+
+  // expName 기준으로 묶기
+  const grouped = new Map<string, typeof exps>();
+  for (const e of exps) {
+    const expName = e.expName ?? e.expId;
+    if (!grouped.has(expName)) grouped.set(expName, []);
+    grouped.get(expName)!.push(e);
+  }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Experiments</h1>
-
-      <div className="border border-neutral-800 rounded-xl overflow-hidden">
-        <div className="grid grid-cols-12 bg-neutral-900/40 text-xs text-neutral-300 px-4 py-2">
-          <div className="col-span-7">expId</div>
-          <div className="col-span-2">variants</div>
-          <div className="col-span-3">leaderboard</div>
+    <div className="space-y-8">
+      <div>
+        <div className="text-2xl font-black">Experiments Lab</div>
+        <div className="opacity-70">
+          runs 폴더를 스캔해서 실험 블록(실험 단위)로 표시합니다.
         </div>
-
-        {exps.map((e) => (
-          <Link
-            key={e.expId}
-            href={`/experiments/${encodeURIComponent(e.expId)}`}
-            className="grid grid-cols-12 px-4 py-3 border-t border-neutral-900 hover:bg-neutral-900/30"
-          >
-            <div className="col-span-7 font-mono text-sm">{e.expId}</div>
-            <div className="col-span-2 text-sm">{e.variants}</div>
-            <div className="col-span-3 text-sm">{e.hasLeaderboard ? "yes" : "no"}</div>
-          </Link>
-        ))}
-
-        {exps.length === 0 && (
-          <div className="px-4 py-6 text-sm text-neutral-400">
-            runs/ 폴더를 못 찾았거나 비어있음
-          </div>
-        )}
       </div>
+
+      {[...grouped.entries()].map(([expName, items]) => (
+        <section key={expName} className="space-y-3">
+          <div className="text-xl font-bold">{expName}</div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {items.map((e) => {
+              let best: string | undefined;
+              let bestRow: any = null;
+
+              try {
+                const lb = readLeaderboard(e.expId);
+                best = pickBestVariant(lb);
+                bestRow = lb.find((r) => r.variant === best) ?? lb[0];
+              } catch {
+                // leaderboard가 없거나 파싱 실패해도 UI는 살아있게
+              }
+
+              return (
+                <div key={e.expId} className="rounded-2xl border p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <Link
+                        href={`/experiments/${e.expId}`}
+                        className="text-lg font-bold hover:underline"
+                      >
+                        {e.expId}
+                      </Link>
+
+                      <div className="text-sm opacity-70">
+                        {e.createdAt} · variants {e.variants.length}
+                      </div>
+
+                      {best && (
+                        <div className="mt-1 text-sm">
+                          <span className="opacity-70">Best:</span>{" "}
+                          <span className="font-semibold">{best}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-xs opacity-60 text-right">
+                      Best Rule<br />
+                      center_late_p95 → vehicles_used → ride_time_p95
+                    </div>
+                  </div>
+
+                  {bestRow && (
+                    <div className="mt-3">
+                      <KpiPills row={bestRow} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

@@ -1,105 +1,148 @@
 import Link from "next/link";
-import { listVariants, readLeaderboard } from "../../../lib/runsRepo";
-import LeaderboardTable from "./LeaderboardTable";
+import { readLeaderboard, pickBestVariant } from "@/lib/runs";
+import { KpiPills } from "@/components/KpiPills";
 
 export const dynamic = "force-dynamic";
 
-function pickBestVariant(rows: any[]) {
-  const scored = rows
-    .map((r) => ({
-      variant: String(r.variant ?? ""),
-      a: Number(r.center_late_p95),
-      b: Number(r.vehicles_used),
-    }))
-    .filter((x) => x.variant && Number.isFinite(x.a) && Number.isFinite(x.b))
-    .sort((x, y) => x.a - y.a || x.b - y.b);
-  return scored[0]?.variant ?? null;
+function getFirstParam(params: Record<string, any>): string | null {
+  const raw =
+    params?.expId ??
+    params?.expid ??
+    params?.id ??
+    // fallback: 첫 value
+    (params ? Object.values(params)[0] : null);
+
+  if (typeof raw !== "string" || raw.length === 0) return null;
+  return raw;
 }
 
-export default async function Page({ params }: { params: Promise<{ expId: string }> }) {
-  const { expId: raw } = await params;
+function hrefVariant(expId: string, variantId: string) {
+  return `/experiments/${encodeURIComponent(expId)}/variants/${encodeURIComponent(
+    variantId
+  )}`;
+}
+
+export default async function ExperimentDetailPage({
+  params,
+}: {
+  // Next 16 일부 런타임에서 params가 Promise로 들어올 수 있음
+  params: Promise<Record<string, any>> | Record<string, any>;
+}) {
+  // ✅ unwrap (Promise면 await, 아니면 그대로)
+  const p = (typeof (params as any)?.then === "function"
+    ? await (params as Promise<Record<string, any>>)
+    : (params as Record<string, any>)) as Record<string, any>;
+
+  const raw = getFirstParam(p);
+
+  if (!raw) {
+    return (
+      <div className="space-y-4">
+        <div className="text-2xl font-black">Experiment</div>
+        <div className="rounded-2xl border p-4">
+          <div className="font-bold text-red-600">Invalid route params</div>
+          <div className="mt-2 text-sm opacity-70">
+            params에서 expId를 찾지 못했습니다.
+          </div>
+        </div>
+        <Link href="/experiments" className="opacity-70 hover:underline">
+          ← back
+        </Link>
+      </div>
+    );
+  }
+
   const expId = decodeURIComponent(raw);
 
-  const [variants, leaderboard] = await Promise.all([
-    listVariants(expId).catch(() => []),
-    readLeaderboard(expId).catch(() => []),
-  ]);
+  let lb: any[] = [];
+  try {
+    lb = readLeaderboard(expId);
+  } catch (e: any) {
+    return (
+      <div className="space-y-4">
+        <div className="text-2xl font-black">{expId}</div>
+        <div className="rounded-2xl border p-4">
+          <div className="font-bold text-red-600">Failed to read leaderboard</div>
+          <pre className="mt-2 text-xs opacity-80 whitespace-pre-wrap">
+{String(e?.message ?? e)}
+          </pre>
+        </div>
+        <Link href="/experiments" className="opacity-70 hover:underline">
+          ← back
+        </Link>
+      </div>
+    );
+  }
 
-  const best = pickBestVariant(leaderboard);
+  const best = pickBestVariant(lb);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-xs text-neutral-400">Experiment</div>
-          <h1 className="text-2xl font-bold font-mono">{expId}</h1>
-        </div>
-
-        <div className="flex gap-3 items-center">
-          <Link className="text-sm text-neutral-300 hover:underline" href="/experiments">
-            ← back
-          </Link>
-          <Link className="text-sm text-neutral-300 hover:underline" href={`/experiments/${encodeURIComponent(expId)}/compare`}>
-            Compare →
-          </Link>
-          <Link className="text-sm text-neutral-300 hover:underline" href="/new-run">
-            New Run →
-          </Link>
-        </div>
+      <div>
+        <div className="text-2xl font-black">{expId}</div>
+        <div className="opacity-70">leaderboard.csv 기반</div>
       </div>
 
       {best && (
-        <div className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-neutral-400">Best (rule: center_late_p95 min → vehicles_used min)</div>
-            <div className="font-mono text-sm mt-1">{best}</div>
+        <div className="rounded-2xl border p-4">
+          <div className="font-bold">Best Variant</div>
+          <div className="mt-1">
+            <Link
+              href={hrefVariant(expId, best)}
+              className="font-semibold hover:underline"
+            >
+              {best}
+            </Link>
           </div>
-          <Link
-            className="text-sm text-neutral-300 hover:underline"
-            href={`/experiments/${encodeURIComponent(expId)}/variants/${encodeURIComponent(best)}`}
-          >
-            Open →
-          </Link>
+          <div className="mt-3">
+            <KpiPills row={lb.find((r) => r.variant === best) ?? lb[0]} />
+          </div>
         </div>
       )}
 
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold">Variants</div>
-          <div className="text-xs text-neutral-400">count: {variants.length}</div>
-        </div>
+      <div className="rounded-2xl border p-4 overflow-auto">
+        <table className="min-w-[1100px] w-full text-sm">
+          <thead className="bg-black/5">
+            <tr>
+              {Object.keys(lb[0] ?? {}).map((k) => (
+                <th key={k} className="px-3 py-2 text-left whitespace-nowrap">
+                  {k}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lb.map((r, i) => (
+              <tr key={i} className="border-t">
+                {Object.keys(lb[0] ?? {}).map((k) => {
+                  const v = r[k];
+                  if (k === "variant") {
+                    return (
+                      <td key={k} className="px-3 py-2 whitespace-nowrap">
+                        <Link
+                          href={hrefVariant(expId, v)}
+                          className="font-semibold hover:underline"
+                        >
+                          {v}
+                        </Link>
+                      </td>
+                    );
+                  }
+                  return (
+                    <td key={k} className="px-3 py-2 whitespace-nowrap">
+                      {v}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {variants.map((v) => (
-            <Link
-              key={v}
-              href={`/experiments/${encodeURIComponent(expId)}/variants/${encodeURIComponent(v)}`}
-              className="text-xs font-mono px-3 py-1 rounded-lg border border-neutral-800 hover:border-neutral-600 hover:bg-neutral-900"
-            >
-              {v}
-            </Link>
-          ))}
-          {variants.length === 0 && <div className="text-sm text-neutral-400">no variants</div>}
-        </div>
-      </section>
-
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold">Leaderboard</div>
-            <div className="text-xs text-neutral-400">정렬/필터는 테이블에서 바로 가능</div>
-          </div>
-
-          <a
-            className="text-sm text-neutral-300 hover:underline"
-            href={`/api/download?expId=${encodeURIComponent(expId)}&file=leaderboard.csv`}
-          >
-            Download CSV
-          </a>
-        </div>
-
-        <LeaderboardTable expId={expId} rows={leaderboard} />
-      </section>
+      <Link href="/experiments" className="opacity-70 hover:underline">
+        ← back
+      </Link>
     </div>
   );
 }

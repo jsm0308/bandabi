@@ -1,111 +1,99 @@
-// apps/dev_ui/src/app/experiments/[expId]/variants/[variantId]/page.tsx
 import Link from "next/link";
-import { readVariantFiles } from "../../../../../lib/runsRepo";
-import { KpiCards } from "../../../../../components/KpiCards";
-import { DataTable } from "../../../../../components/DataTable";
-import type { ColumnDef } from "@tanstack/react-table";
+import { readVariantFiles } from "@/lib/runs";
+import { Histogram } from "@/components/Histogram";
+import { ECDF } from "@/components/ECDF";
+import { EdgeCasesTable } from "@/components/EdgeCasesTable";
 
 export const dynamic = "force-dynamic";
 
-type Row = Record<string, any>;
-
-function inferColumns(rows: Row[], limit = 12): ColumnDef<Row>[] {
-  const keys = Array.from(new Set(rows.flatMap((r) => Object.keys(r ?? {})))).slice(0, limit);
-  return keys.map((k) => ({
-    accessorKey: k,
-    header: k,
-    cell: ({ row }) => {
-      const v = row.original[k];
-      if (v == null) return "";
-      return typeof v === "number" ? (Number.isFinite(v) ? v.toString() : "") : String(v);
-    },
-  }));
+function toNum(x: any): number {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : NaN;
 }
 
-export default async function Page({
+export default function VariantDetailPage({
   params,
 }: {
-  params: Promise<{ expId: string; variantId: string }>;
+  params: { expId: string; variantId: string };
 }) {
-  const { expId: rawE, variantId: rawV } = await params;
-  const expId = decodeURIComponent(rawE);
-  const variantId = decodeURIComponent(rawV);
+  const expId = decodeURIComponent(params.expId);
+  const variantId = decodeURIComponent(params.variantId);
 
-  const data = await readVariantFiles(expId, variantId);
+  const { metrics, events, routes } = readVariantFiles(expId, variantId);
 
-  const routesCols = inferColumns(data.routesPreview);
-  const eventsCols = inferColumns(data.eventsPreview);
+  // late = actual - promise
+  const pickupLate = events
+    .map((r) => toNum(r["pickup_actual_min"]) - toNum(r["pickup_promise_min"]))
+    .filter((v) => Number.isFinite(v))
+    .map((v) => String(v));
 
-  const dl = (file: string) =>
-    `/api/download?expId=${encodeURIComponent(expId)}&variant=${encodeURIComponent(variantId)}&file=${encodeURIComponent(file)}`;
+  const centerLate = events
+    .map((r) => toNum(r["center_actual_min"]) - toNum(r["center_promise_min"]))
+    .filter((v) => Number.isFinite(v))
+    .map((v) => String(v));
+
+  const rideTime = events
+    .map((r) => toNum(r["ride_time_min"]))
+    .filter((v) => Number.isFinite(v))
+    .map((v) => String(v));
+
+  // edge cases: pickup late top 30
+  const edge = events
+    .map((r) => {
+      const pl = toNum(r["pickup_actual_min"]) - toNum(r["pickup_promise_min"]);
+      const cl = toNum(r["center_actual_min"]) - toNum(r["center_promise_min"]);
+      return {
+        ...r,
+        pickup_late_min: String(pl),
+        center_late_min: String(cl),
+      };
+    })
+    .filter((r) => Number.isFinite(Number(r.pickup_late_min)))
+    .sort((a, b) => Number(b.pickup_late_min) - Number(a.pickup_late_min))
+    .slice(0, 30);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-xs text-neutral-400">Variant</div>
-          <h1 className="text-2xl font-bold font-mono">{expId} / {variantId}</h1>
+    <div className="space-y-8">
+      <div>
+        <div className="text-2xl font-black">
+          {expId} / {variantId}
         </div>
-        <div className="flex gap-3 items-center">
-          <Link className="text-sm text-neutral-300 hover:underline" href={`/experiments/${encodeURIComponent(expId)}`}>
-            ← back
-          </Link>
-          <a className="text-sm text-neutral-300 hover:underline" href={dl("config_resolved.yaml")}>
-            config 다운로드
-          </a>
+        <div className="opacity-70">
+          metrics.csv / events.csv / routes.csv 기반
         </div>
       </div>
 
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold">KPIs (metrics.csv)</div>
-          <a className="text-sm text-neutral-300 hover:underline" href={dl("metrics.csv")}>
-            Download metrics.csv
-          </a>
-        </div>
-        <KpiCards metrics={data.metrics} />
-      </section>
-
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold">config_resolved.yaml</div>
-          <a className="text-sm text-neutral-300 hover:underline" href={dl("config_resolved.yaml")}>Download</a>
-        </div>
-        <pre className="text-xs overflow-auto max-h-[520px] whitespace-pre-wrap border border-neutral-900 rounded-lg p-3 bg-neutral-950 text-neutral-100">
-{data.configYaml || "(missing config_resolved.yaml)"}
-        </pre>
-      </section>
-
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="font-semibold">routes.csv (preview)</div>
-          <a className="text-sm text-neutral-300 hover:underline" href={dl("routes.csv")}>
-            Download routes.csv
-          </a>
-        </div>
-        {data.routesPreview.length === 0 ? (
-          <div className="text-sm text-neutral-400">(no routes preview)</div>
-        ) : (
-          <DataTable data={data.routesPreview} columns={routesCols} globalFilterPlaceholder="routes 검색..." />
-        )}
-      </section>
-
-      <section className="border border-neutral-800 rounded-xl p-4 bg-neutral-950 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold">events.csv (head preview)</div>
-            <div className="text-xs text-neutral-400">대용량 안전: head만 파싱, 전체는 다운로드</div>
+      {metrics && (
+        <div className="rounded-2xl border p-4">
+          <div className="font-bold mb-2">Metrics</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+            {Object.entries(metrics).map(([k, v]) => (
+              <div key={k} className="rounded-xl border px-3 py-2">
+                <div className="text-xs opacity-60">{k}</div>
+                <div className="font-semibold">{String(v)}</div>
+              </div>
+            ))}
           </div>
-          <a className="text-sm text-neutral-300 hover:underline" href={dl("events.csv")}>
-            Download events.csv
-          </a>
         </div>
-        {data.eventsPreview.length === 0 ? (
-          <div className="text-sm text-neutral-400">(no events preview)</div>
-        ) : (
-          <DataTable data={data.eventsPreview} columns={eventsCols} globalFilterPlaceholder="events 검색..." />
-        )}
-      </section>
+      )}
+
+      <div className="grid grid-cols-1 gap-4">
+        <Histogram title="Pickup Late (min)" values={pickupLate} bins={24} />
+        <ECDF title="Pickup Late ECDF" values={pickupLate} />
+        <Histogram title="Center Late (min)" values={centerLate} bins={24} />
+        <ECDF title="Center Late ECDF" values={centerLate} />
+        <Histogram title="Ride Time (min)" values={rideTime} bins={24} />
+        <ECDF title="Ride Time ECDF" values={rideTime} />
+      </div>
+
+      <EdgeCasesTable title="Edge Cases: Pickup Late Top 30" rows={edge} />
+
+      <Link
+        href={`/experiments/${encodeURIComponent(expId)}`}
+        className="opacity-70 hover:underline"
+      >
+        ← back
+      </Link>
     </div>
   );
 }
