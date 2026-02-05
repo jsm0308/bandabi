@@ -1,0 +1,13 @@
+routing:
+  method: "cluster_first"
+  # cluster_first 자체는 "먼저 나누기"를 의미하고,
+  # 내부 라우팅은 inner_method로 설정
+  cluster:
+    strategy: "center_dist"     # "chunk"도 가능하지만 cluster-first 느낌은 center_dist
+    seed: 0
+    lat_col: "pickup_lat"
+    lon_col: "pickup_lon"
+
+    inner_method: "time_nn"
+    inner_improve_2opt: true
+

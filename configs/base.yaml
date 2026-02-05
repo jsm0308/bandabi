@@ -1,0 +1,40 @@
+paths:
+  centers_xlsx: "data/centers.xlsx"
+  run_root: "runs"
+
+outputs:
+  write_map_data: true
+  write_map_html: true
+
+sim:
+  travel_time_noise_sigma: 0.0   # road에서는 일단 0 추천 (결과 재현성)
+  detour_factor: 1.0
+
+time_model:
+  kind: "road"
+  graphml_path: "data/cache/osmnx/seoul_drive.graphml"
+  speed_multiplier: 1.0
+
+  # (옵션) 도로 타입별 기준 속도. 아래 패치(time_model.py) 적용하면 사용됨.
+  road:
+    prefer_maxspeed: false
+    fallback_speed_kph: 25.0
+    speed_kph_by_highway:
+      motorway: 80
+      trunk: 60
+      primary: 50
+      secondary: 45
+      tertiary: 40
+      residential: 25
+      living_street: 15
+      service: 15
+      unclassified: 30
+      road: 30
+      unknown: 25
+    multiplier_by_highway: {}
+    min_speed_kph: 3.0
+
+kpi:
+  # “정시 도착”으로 인정하는 허용 지연(분)
+  # 예: 5분 이내 지연이면 on_time
+  on_time_threshold_min: 5

@@ -1,0 +1,4 @@
+exp_name: phase2_routing_improve
+params:
+  - path: routing.improve
+    values: [none, two_opt, tabu]

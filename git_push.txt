@@ -1,0 +1,44 @@
+# 📅 Daily Git Routine Checklist
+
+> **Purpose**: 하루의 개발 내용을 안전하게 원격 저장소(GitHub)에 백업하기 위함.
+> **File Name**: `daily_git_routine.md`
+
+## 0. 최초 1회 설정 (이미 했으면 패스)
+아직 깃 연동을 안 했다면, 터미널에서 딱 한 번만 실행하세요.
+```bash
+# 1. 깃 초기화
+git init
+
+# 2. 불필요한 파일 무시 (.gitignore 확인)
+# (node_modules, .env, __pycache__ 등이 들어있어야 함)
+
+# 3. 내 레포지토리 연결 (주소는 본인 GitHub Repo 주소로 변경)
+git remote add origin https://github.com/jsm0308/bandabi_v1.git
+
+# 4. 현재 브랜치 이름 확인 (보통 main)
+git branch -M main
+
+
+Step 1: 변경사항 확인
+내가 뭘 고쳤는지 확인합니다. 빨간색으로 뜬 파일들이 변경된 것들입니다.
+
+git status
+
+Step 2: 장바구니 담기 (Staging)
+모든 변경사항을 저장 대기 상태로 만듭니다.
+
+Bash
+git add .
+Step 3: 포장하기 (Commit)
+오늘 한 일을 한 줄로 요약해서 기록합니다.
+
+예: "feat: pipeline 분리 작업 완료", "fix: 오타 수정"
+
+Bash
+git commit -m "작업 내용: 오늘 날짜 or 기능명"
+Step 4: 발송하기 (Push)
+GitHub 서버로 쏘아 올립니다.
+
+Bash
+git push -u origin main
+(만약 에러가 나면 git pull origin main --rebase 후 다시 push)

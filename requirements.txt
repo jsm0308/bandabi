@@ -1,0 +1,14 @@
+numpy>=1.26
+pandas>=2.2
+pyyaml>=6.0
+openpyxl>=3.1
+networkx>=2.8
+scikit-learn>=1.2
+
+# 실도로(필수)
+osmnx>=1.9
+
+# osmnx가 내부에서 많이 쓰는 의존성(보통 osmnx가 자동으로 가져오긴 함)
+geopandas>=0.14
+shapely>=2.0
+pyproj>=3.6

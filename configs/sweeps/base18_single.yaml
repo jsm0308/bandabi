@@ -1,0 +1,3 @@
+exp_name: base18_single
+param_path: time_model.speed_multiplier
+values: [1.0]

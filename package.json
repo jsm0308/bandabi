@@ -1,0 +1,10 @@
+{
+  "name": "vibe-harness-starter",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "verify": "bash scripts/verify.sh"
+  }
+}

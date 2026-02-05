@@ -1,0 +1,3 @@
+exp_name: "phase1_time_mult"
+param_path: "time_model.speed_multiplier"
+values: [0.9, 1.0, 1.1, 1.2]

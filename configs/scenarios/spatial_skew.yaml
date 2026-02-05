@@ -1,0 +1,23 @@
+scenario_name: "spatial_skew"
+
+area:
+  gu_list: ["ALL"]
+
+service:
+  to_center_timeslots: ["10:00", "12:00", "16:00"]
+  from_center_timeslots: ["18:00"]
+  timezone: "Asia/Seoul"
+
+demand:
+  n_requests_per_timeslot: 120
+  wheel_ratio: 0.25
+  seed: 42
+  radius_min_km: 0.5
+  radius_max_km: 3.0
+  # (주의) 실제 skew 로직은 demand.py가 지원해야 효과가 남. 지금은 “이름만” 유지.
+  spatial_skew: true
+
+fleet:
+  capacity_gen: 10
+  capacity_wc: 4
+  max_vehicles_per_center_slot: 5

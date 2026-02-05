@@ -1,0 +1,21 @@
+scenario_name: "tight_constraints"
+
+area:
+  gu_list: ["ALL"]
+
+service:
+  to_center_timeslots: ["10:00", "12:00", "16:00"]
+  from_center_timeslots: ["18:00"]
+  timezone: "Asia/Seoul"
+
+demand:
+  n_requests_per_timeslot: 120
+  wheel_ratio: 0.25
+  seed: 42
+  radius_min_km: 0.5
+  radius_max_km: 3.0
+
+fleet:
+  capacity_gen: 10
+  capacity_wc: 4
+  max_vehicles_per_center_slot: 2

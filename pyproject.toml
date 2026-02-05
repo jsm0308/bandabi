@@ -1,0 +1,25 @@
+[project]
+name = "bandabi"
+version = "0.1.0"
+description = "Bandabi shuttle simulation & experiment runner"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "pyyaml>=6.0",
+  "openpyxl>=3.1",
+]
+
+[project.scripts]
+bandabi-run = "bandabi.cli:main"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = []
+
+[tool.pytest.ini_options]
+addopts = "-q"

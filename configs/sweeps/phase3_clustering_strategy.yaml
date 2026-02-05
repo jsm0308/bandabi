@@ -1,0 +1,4 @@
+exp_name: phase3_clustering_strategy
+params:
+  - path: clustering.strategy
+    values: [chunk, kmedoids_geo]

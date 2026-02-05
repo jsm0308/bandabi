@@ -1,0 +1,3 @@
+routing:
+  method: "euclid_nn"
+  improve_2opt: false
