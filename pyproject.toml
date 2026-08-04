@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bandabi"
 version = "0.1.0"
@@ -12,6 +16,10 @@ dependencies = [
 
 [project.scripts]
 bandabi-run = "bandabi.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bandabi*", "routing*"]
+exclude = ["apps*", "configs*", "data*", "legacy*", "tests*"]
 
 [tool.ruff]
 line-length = 110
