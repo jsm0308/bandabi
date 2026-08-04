@@ -17,6 +17,10 @@ def test_pipeline_smoke(tmp_path):
     cfg["demand"]["n_requests_per_timeslot"] = 4
     cfg.setdefault("sim", {})
     cfg["sim"]["travel_time_noise_sigma"] = 0.0
+    # CI에는 서울 OSM GraphML 캐시가 없으므로 계산 파이프라인 자체를
+    # 검증하는 스모크 테스트에서는 결정적인 거리 모델을 사용한다.
+    cfg.setdefault("time_model", {})
+    cfg["time_model"]["kind"] = "euclid"
 
     out_dir = tmp_path / "run"
     kpis = run(cfg, str(out_dir))

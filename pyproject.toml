@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "bandabi"
 version = "0.1.0"
@@ -8,10 +12,25 @@ dependencies = [
   "pandas>=2.2",
   "pyyaml>=6.0",
   "openpyxl>=3.1",
+  "networkx>=2.8",
 ]
+
+[project.optional-dependencies]
+road = [
+  "osmnx>=1.9",
+  "geopandas>=0.14",
+  "shapely>=2.0",
+  "pyproj>=3.6",
+  "scikit-learn>=1.2",
+]
+test = ["pytest>=8.0"]
 
 [project.scripts]
 bandabi-run = "bandabi.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bandabi*", "routing*"]
+exclude = ["apps*", "configs*", "data*", "legacy*", "tests*"]
 
 [tool.ruff]
 line-length = 110
