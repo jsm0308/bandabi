@@ -1,6 +1,10 @@
 # Generated files
 runs/
 data/cache/
+cache/
+db/*.sqlite
+*.zip
+git_push.txt
 
 # Python
 __pycache__/
@@ -9,6 +13,7 @@ __pycache__/
 *.so
 
 # Virtual environments
+.venv/
 venv/
 env/
 ENV/
