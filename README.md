@@ -28,7 +28,7 @@
 Python 3.10 이상에서 의존성을 설치한 뒤 실행합니다.
 
 ~~~bash
-pip install -e .
+pip install -e ".[road]"
 python -m bandabi \
   --base configs/base.yaml \
   --scenario configs/scenarios/seoul_allgu_v1.yaml \
@@ -69,6 +69,7 @@ bandabi-run \
 ## 검증
 
 ~~~bash
+pip install -e ".[test]"
 pytest
 ~~~
 
